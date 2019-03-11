@@ -16,6 +16,7 @@ from moin.utils.tree import moin_page, xinclude
 from ._args_wiki import parse as parse_arguments
 from ._args_wiki import include_re
 from moin.i18n import _, L_, N_
+import re
 
 from moin import log
 logging = log.getLogger(__name__)
@@ -62,6 +63,7 @@ class ConverterMacro(object):
             div = moin_page.div(children=(txt, msg))
             return div
 
+        args_orig = args # save before they get clobbered
         if args:
             args = parse_arguments(args, parse_re=include_re)
         else:
@@ -69,11 +71,41 @@ class ConverterMacro(object):
         pagename = args[0]
         heading = None
         level = None
+        from_re = None
+        to_re = None
         try:
             heading = args[1]
             level = int(args[2])
+            from_re = args[3]
+            to_re = args[4]
         except (IndexError, ValueError):
             pass
+
+        # the fancy "include_re" regex isn't capturing the from/to args, so getting them another way
+        m = re.search('from="([^"]*)"', args_orig)
+        if m:
+            from_re = m.group(1)
+        m = re.search('to="([^"]*)"', args_orig)
+        if m:
+            to_re = m.group(1)
+
+#        if heading:
+#          print "KENT heading = " + heading
+#        else:
+#          print "KENT heading = None" 
+#        if level:
+#          print "KENT level = " + str(level)
+#        else:
+#          print "KENT level = None" 
+#        if from_re:
+#          print "KENT from_re = " + from_re
+#        else:
+#          print "KENT from_re = None" 
+#        if to_re:
+#          print "KENT to_re = " + to_re
+#        else:
+#          print "KENT to_re = None" 
+
         sort = 'sort' in args and args['sort']
         if sort and sort not in ('ascending', 'descending'):
             return error_message(_("Include Macro above has invalid format, expected sort=ascending or descending"))
