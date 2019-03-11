@@ -235,6 +235,7 @@ class Converter(object):
                 xp_include_skipitems = None
                 xp_include_heading = None
                 xp_include_level = None
+                xp_include_suppress_acl_error = None
 
                 if xpointer:
                     # we are working on an <<Include(abc)>> macro, not a {{transclusion}}
@@ -274,6 +275,8 @@ class Converter(object):
                                 xp_include_heading = data
                             elif name == 'level':
                                 xp_include_level = data
+                            elif name == 'suppress-acl-error':
+                                xp_include_suppress_acl_error = int(data)
 
                 included_elements = []
                 if href:
@@ -310,7 +313,10 @@ class Converter(object):
                         attrib = {html.class_: 'warning moin-read-denied'}
                         div = ET.Element(moin_page.div, attrib, children=(message, ))
                         container = ET.Element(moin_page.body, children=(div, ))
+                        if xp_include_suppress_acl_error is not None:
+                          return # don't return dialog at all, not even with 'moin-read-denied' class
                         return [container, 0]  # replace transclusion with container's child
+
 
                 elif xp_include_pages:
                     # we have regex of pages to include:  <<Include(^qqq)>>
